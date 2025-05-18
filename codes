@@ -1,0 +1,224 @@
+#linear regression
+def estimate_coef(x,y):
+  n=np.size(x)
+  mean_x=np.mean(x)
+  mean_y=np.mean(y)
+
+  meanx_mean_y=mean_x*mean_y
+
+  mean_xy=np.mean(x*y)
+
+  mean_xs=np.mean(x*x)
+  sq_mean=mean_x*mean_x
+
+  b_1=(mean_xy-meanx_mean_y)/(mean_xs-sq_mean)
+  b_0=mean_y-b_1*mean_x
+
+  return (b_0,b_1)
+
+
+def plot_regression_line(x,y,b):
+    plt.scatter(x,y,color="m",marker="o",s=30)
+
+    y_pred=b[0]+b[1]*x
+
+    plt.plot(x,y_pred,color="g")
+
+    plt.xlabel('YearsExperience')
+    plt.ylabel('Salary')
+    plt.show()
+
+def main():
+    data=pd.read_csv("/content/Salary_Data.csv")
+    x=data["YearsExperience"]
+    y=data["Salary"]
+    b=estimate_coef(x,y)
+    print("Estimated coefficients:b_0={} \nb_1={}".format(b[0],b[1]))
+    plot_regression_line(x,y,b)
+main()
+
+# multiple
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
+class LinearRegression:
+    def __init__(self, learning_rate=0.01, n_iters=1000):
+        self.lr = learning_rate
+        self.n_iters = n_iters
+        self.weights = None
+        self.bias = None
+
+    def fit(self, X, y):
+        n_samples, n_features = X.shape
+        self.weights = np.zeros((n_features, 1))
+        self.bias = 0
+
+        for _ in range(self.n_iters):
+            y_pred = np.dot(X, self.weights) + self.bias
+
+            dw = (1 / n_samples) * np.dot(X.T, (y_pred - y))
+            db = (1 / n_samples) * np.sum(y_pred - y)
+
+            self.weights -= self.lr * dw
+            self.bias -= self.lr * db
+
+    def predict(self, X):
+        return np.dot(X, self.weights) + self.bias
+
+if __name__ == "__main__":
+    # Load data
+    df = pd.read_csv("/content/Salary_dataset.csv")
+
+    X = df[["YearsExperience"]].values
+    y = df[["Salary"]].values
+
+    model = LinearRegression(learning_rate=0.05, n_iters=2000)
+    model.fit(X, y)
+    predictions = model.predict(X)
+
+    # Metrics
+    mse = mean_squared_error(y, predictions)
+    mae = mean_absolute_error(y, predictions)
+    r2 = r2_score(y, predictions)
+
+    print(f"Weights: {model.weights.flatten()}")
+    print(f"Bias: {model.bias}")
+    print(f"Mean Squared Error: {mse:.4f}")
+    print(f"Mean Absolute Error: {mae:.4f}")
+    print(f"R-squared: {r2:.4f}")
+
+    # Plot
+    sort_idx = X[:, 0].argsort()
+    X_sorted = X[sort_idx]
+    predictions_sorted = predictions[sort_idx]
+
+    plt.scatter(X, y, color='blue', label='Actual data')
+    plt.plot(X_sorted, predictions_sorted, color='red', label='Prediction')
+    plt.xlabel("YearsExperience")
+    plt.ylabel("Salary")
+    plt.legend()
+    plt.show()
+
+
+
+# multiple
+import pandas as pd
+import numpy as np
+
+# Step 1: Load the dataset
+df = pd.read_csv('Student_Performance.csv')
+
+# Step 2: Preprocess the data
+# Encode 'Extracurricular Activities' column: Yes -> 1, No -> 0
+df['Extracurricular Activities'] = df['Extracurricular Activities'].map({'Yes': 1, 'No': 0})
+
+# Define feature columns and target variable
+feature_cols = [
+    'Hours Studied',
+    'Previous Scores',
+    'Extracurricular Activities',
+    'Sleep Hours',
+    'Sample Question Papers Practiced'
+]
+target_col = 'Performance Index'
+
+# Extract features and target from the dataframe
+X = df[feature_cols].astype(float).values
+Y = df[target_col].astype(float).values
+
+# Add an intercept term to the features
+X = np.column_stack((np.ones(X.shape[0]), X))
+
+# Step 3: Compute regression coefficients using the normal equation
+XtX = X.T @ X
+XtX_inv = np.linalg.inv(XtX)
+XtY = X.T @ Y
+beta = XtX_inv @ XtY
+
+# Step 4: Make predictions
+Y_pred = X @ beta
+
+# Calculate evaluation metrics
+mse = np.mean((Y - Y_pred) ** 2)
+rss = np.sum((Y - Y_pred) ** 2)
+tss = np.sum((Y - np.mean(Y)) ** 2)
+r_squared = 1 - (rss / tss)
+
+# Output the results
+print("Model Coefficients (including intercept):", beta)
+print(f"Mean Squared Error (MSE): {mse:.2f}")
+print(f"R-squared (R²): {r_squared:.4f}")
+
+
+
+logistic-
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Step 1: Load the dataset
+df = pd.read_csv('diabetes2.csv')  # Make sure the file is in your working directory
+
+# Step 2: Define features and target
+feature_cols = [
+    'Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness',
+    'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age'
+]
+target_col = 'Outcome'
+
+X = df[feature_cols].astype(float).values
+Y = df[target_col].values
+
+# Add intercept term
+X = np.column_stack((np.ones(X.shape[0]), X))
+
+# Step 3: Compute coefficients via normal equation
+XtX = X.T @ X
+XtX_inv = np.linalg.inv(XtX)
+XtY = X.T @ Y
+beta = XtX_inv @ XtY
+
+# Step 4: Predict linear values and apply sigmoid
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+linear_preds = X @ beta
+prob_preds = sigmoid(linear_preds)
+
+# Step 5: Convert probabilities to binary predictions
+binary_preds = (prob_preds >= 0.5).astype(int)
+
+# Step 6: Compute evaluation metrics
+accuracy = np.mean(binary_preds == Y)
+tp = np.sum((binary_preds == 1) & (Y == 1))
+tn = np.sum((binary_preds == 0) & (Y == 0))
+fp = np.sum((binary_preds == 1) & (Y == 0))
+fn = np.sum((binary_preds == 0) & (Y == 1))
+
+precision = tp / (tp + fp + 1e-8)
+recall = tp / (tp + fn + 1e-8)
+f1 = 2 * precision * recall / (precision + recall + 1e-8)
+
+print("Model Coefficients (including intercept):", beta)
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+print(f"F1 Score: {f1:.4f}")
+
+# Step 7: Plot sigmoid curve
+z = np.linspace(-10, 10, 200)
+sigmoid_values = sigmoid(z)
+
+plt.figure(figsize=(8, 5))
+plt.plot(z, sigmoid_values, label='Sigmoid function', color='blue')
+plt.title('Sigmoid Curve')
+plt.xlabel('Input (z)')
+plt.ylabel('Sigmoid(z)')
+plt.grid(True)
+plt.legend()
+plt.show()
+
+
+
